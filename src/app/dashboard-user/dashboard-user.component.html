@@ -1,0 +1,80 @@
+<div class="dashboard-container">
+    <mat-toolbar color="primary">
+      <span>Tienda Online</span>
+      <span class="spacer"></span>
+      <button mat-icon-button [matBadge]="cart.length" 
+              [matBadgeHidden]="cart.length === 0"
+              (click)="showCart = !showCart">
+        <mat-icon>shopping_cart</mat-icon>
+      </button>
+      <button mat-icon-button (click)="logout()">
+        <mat-icon>exit_to_app</mat-icon>
+      </button>
+    </mat-toolbar>
+  
+    <div class="content">
+      <div class="products-grid" [class.with-cart]="showCart">
+        @for (product of products; track product.id) {
+          <mat-card class="product-card">
+            <img mat-card-image src="/api/placeholder/300/200" [alt]="product.nombre">
+            <mat-card-content>
+              <h2>{{product.nombre}}</h2>
+              <p>{{product.descripcion}}</p>
+              <p class="price">${{product.precio.toFixed(2)}}</p>
+              <p class="stock">Stock: {{product.stock}}</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button color="primary" 
+                      (click)="addToCart(product)"
+                      [disabled]="product.stock === 0">
+                Agregar al Carrito
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+  
+      <!-- Carrito -->
+      @if (showCart) {
+        <div class="cart-sidebar">
+          <div class="cart-header">
+            <h2>Carrito de Compras</h2>
+            <button mat-icon-button (click)="showCart = false">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+  
+          @if (cart.length === 0) {
+            <p class="empty-cart">El carrito está vacío</p>
+          } @else {
+            <div class="cart-items">
+              @for (item of cart; track item.product.id) {
+                <div class="cart-item">
+                  <h3>{{item.product.nombre}}</h3>
+                  <div class="quantity-controls">
+                    <button mat-icon-button (click)="removeFromCart(item)">
+                      <mat-icon>remove</mat-icon>
+                    </button>
+                    <span>{{item.quantity}}</span>
+                    <button mat-icon-button (click)="addToCart(item.product)">
+                      <mat-icon>add</mat-icon>
+                    </button>
+                  </div>
+                  <p class="item-price">${{(item.product.precio * item.quantity).toFixed(2)}}</p>
+                </div>
+              }
+            </div>
+            
+            <div class="cart-footer">
+              <p class="total">Total: ${{getTotal().toFixed(2)}}</p>
+              <button mat-raised-button color="primary" 
+                      class="checkout-button"
+                      (click)="checkout()">
+                Finalizar Compra
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>

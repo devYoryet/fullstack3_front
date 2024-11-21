@@ -1,0 +1,111 @@
+<div class="login-wrapper">
+    <mat-card class="login-card">
+      <mat-card-header>
+        <mat-card-title style="color: white; text-align: center;">
+            {{ isLogin ? 'Iniciar Sesión' : 'Registro' }}
+          </mat-card-title>
+          
+              </mat-card-header>
+  
+      <mat-card-content>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+          <!-- Email Field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Correo Electrónico</mat-label>
+            <input 
+              matInput 
+              type="email" 
+              formControlName="email" 
+              placeholder="ejemplo@correo.com"
+            >
+            <mat-icon matSuffix>email</mat-icon>
+            @if (loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched) {
+              <mat-error>El correo es obligatorio</mat-error>
+            }
+            @if (loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched) {
+              <mat-error>Ingrese un correo válido</mat-error>
+            }
+          </mat-form-field>
+  
+          <!-- Password Field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Contraseña</mat-label>
+            <input 
+              matInput 
+              [type]="hidePassword ? 'password' : 'text'" 
+              formControlName="password"
+            >
+            <button 
+              mat-icon-button 
+              matSuffix 
+              type="button"
+              (click)="hidePassword = !hidePassword"
+            >
+              <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+            </button>
+            @if (loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched) {
+              <mat-error>La contraseña es obligatoria</mat-error>
+            }
+            @if (loginForm.get('password')?.hasError('minlength') && loginForm.get('password')?.touched) {
+              <mat-error>La contraseña debe tener al menos 8 caracteres</mat-error>
+            }
+            @if (loginForm.get('password')?.hasError('pattern') && loginForm.get('password')?.touched) {
+              <mat-error>Debe incluir mayúscula, número y carácter especial</mat-error>
+            }
+          </mat-form-field>
+  
+          <!-- Confirm Password Field (Register only) -->
+          @if (!isLogin) {
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Confirmar Contraseña</mat-label>
+              <input 
+                matInput 
+                [type]="hidePassword ? 'password' : 'text'" 
+                formControlName="confirmPassword"
+              >
+              @if (loginForm.get('confirmPassword')?.hasError('required') && loginForm.get('confirmPassword')?.touched) {
+                <mat-error>Debe confirmar la contraseña</mat-error>
+              }
+              @if (loginForm.get('confirmPassword')?.hasError('passwordMismatch') && loginForm.get('confirmPassword')?.touched) {
+                <mat-error>Las contraseñas no coinciden</mat-error>
+              }
+            </mat-form-field>
+          }
+  
+            <!-- Action Buttons -->
+            <div class="button-container">
+                <button 
+                mat-raised-button 
+                color="primary" 
+                type="submit" 
+                [disabled]="loginForm.invalid"
+                >
+                {{ isLogin ? 'Iniciar Sesión' : 'Registrarse' }}
+                </button>
+            </div>
+            </form>
+  
+        <!-- Additional Actions -->
+        <div class="additional-actions">
+          @if (isLogin) {
+            <button 
+              mat-button 
+              color="accent" 
+              type="button" 
+              (click)="forgotPassword()"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          }
+          <button 
+            mat-button 
+            color="accent" 
+            type="button" 
+            (click)="toggleView()"
+          >
+            {{ isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión' }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>

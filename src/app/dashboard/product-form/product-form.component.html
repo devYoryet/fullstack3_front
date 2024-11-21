@@ -1,0 +1,50 @@
+<h2 mat-dialog-title>{{data ? 'Editar' : 'Nuevo'}} Producto</h2>
+<mat-dialog-content>
+  <form [formGroup]="productForm" class="product-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre" placeholder="Nombre del producto">
+      @if (productForm.get('nombre')?.hasError('required') && productForm.get('nombre')?.touched) {
+        <mat-error>El nombre es requerido</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput formControlName="descripcion" rows="3"></textarea>
+      @if (productForm.get('descripcion')?.hasError('required') && productForm.get('descripcion')?.touched) {
+        <mat-error>La descripción es requerida</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Precio</mat-label>
+      <input matInput type="number" formControlName="precio" min="0">
+      @if (productForm.get('precio')?.hasError('required') && productForm.get('precio')?.touched) {
+        <mat-error>El precio es requerido</mat-error>
+      }
+      @if (productForm.get('precio')?.hasError('min')) {
+        <mat-error>El precio debe ser mayor a 0</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Stock</mat-label>
+      <input matInput type="number" formControlName="stock" min="0">
+      @if (productForm.get('stock')?.hasError('required') && productForm.get('stock')?.touched) {
+        <mat-error>El stock es requerido</mat-error>
+      }
+      @if (productForm.get('stock')?.hasError('min')) {
+        <mat-error>El stock debe ser mayor o igual a 0</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button color="primary" 
+          [disabled]="productForm.invalid"
+          (click)="onSubmit()">
+    {{data ? 'Actualizar' : 'Crear'}}
+  </button>
+</mat-dialog-actions>
