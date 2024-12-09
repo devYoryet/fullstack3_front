@@ -1,3 +1,4 @@
+// src/app/dashboard/product-form/product-form.component.ts
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -5,6 +6,7 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { Product } from '../../services/producto.service';
 
 @Component({
   selector: 'app-product-form',
@@ -17,69 +19,8 @@ import { MatButtonModule } from '@angular/material/button';
     MatInputModule,
     MatButtonModule
   ],
-  template: `
-    <h2 mat-dialog-title>{{data ? 'Editar' : 'Nuevo'}} Producto</h2>
-    <mat-dialog-content>
-      <form [formGroup]="productForm" class="product-form">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Nombre</mat-label>
-          <input matInput formControlName="nombre" placeholder="Nombre del producto">
-          @if (productForm.get('nombre')?.hasError('required') && productForm.get('nombre')?.touched) {
-            <mat-error>El nombre es requerido</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Descripción</mat-label>
-          <textarea matInput formControlName="descripcion" rows="3"></textarea>
-          @if (productForm.get('descripcion')?.hasError('required') && productForm.get('descripcion')?.touched) {
-            <mat-error>La descripción es requerida</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Precio</mat-label>
-          <input matInput type="number" formControlName="precio" min="0">
-          @if (productForm.get('precio')?.hasError('required') && productForm.get('precio')?.touched) {
-            <mat-error>El precio es requerido</mat-error>
-          }
-          @if (productForm.get('precio')?.hasError('min')) {
-            <mat-error>El precio debe ser mayor a 0</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Stock</mat-label>
-          <input matInput type="number" formControlName="stock" min="0">
-          @if (productForm.get('stock')?.hasError('required') && productForm.get('stock')?.touched) {
-            <mat-error>El stock es requerido</mat-error>
-          }
-          @if (productForm.get('stock')?.hasError('min')) {
-            <mat-error>El stock debe ser mayor o igual a 0</mat-error>
-          }
-        </mat-form-field>
-      </form>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Cancelar</button>
-      <button mat-raised-button color="primary" 
-              [disabled]="productForm.invalid"
-              (click)="onSubmit()">
-        {{data ? 'Actualizar' : 'Crear'}}
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [`
-    .product-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      padding: 16px 0;
-    }
-    .full-width {
-      width: 100%;
-    }
-  `]
+  templateUrl: './product-form.component.html',
+  styleUrls: ['./product-form.component.css']
 })
 export class ProductFormComponent {
   productForm: FormGroup;
@@ -87,15 +28,17 @@ export class ProductFormComponent {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<ProductFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: Product
   ) {
     this.productForm = this.fb.group({
-      nombre: [data?.nombre || '', Validators.required],
-      descripcion: [data?.descripcion || '', Validators.required],
+      nombre: [data?.nombre || '', [Validators.required]],
+      descripcion: [data?.descripcion || '', [Validators.required]],
       precio: [data?.precio || '', [Validators.required, Validators.min(0)]],
-      stock: [data?.stock || '', [Validators.required, Validators.min(0)]]
+      stock: [data?.stock || '', [Validators.required, Validators.min(0)]],
+      imagen: [data?.imagen || ''],
+      cantidad: [data?.cantidad || 0]
     });
-
+  
     if (data) {
       this.productForm.addControl('id', this.fb.control(data.id));
     }
@@ -103,11 +46,36 @@ export class ProductFormComponent {
 
   onSubmit() {
     if (this.productForm.valid) {
-      this.dialogRef.close(this.productForm.value);
+      const formValue = this.productForm.value;
+      // Asegurarse de que precio y stock sean números
+      formValue.precio = Number(formValue.precio);
+      formValue.stock = Number(formValue.stock);
+      formValue.cantidad = Number(formValue.cantidad);
+
+      this.dialogRef.close(formValue);
     }
   }
 
   onCancel() {
     this.dialogRef.close();
+  }
+
+  /**
+   * Validadores personalizados si los necesitas
+   */
+  private validatePrice(control: any) {
+    const price = control.value;
+    if (price <= 0) {
+      return { invalidPrice: true };
+    }
+    return null;
+  }
+
+  private validateStock(control: any) {
+    const stock = control.value;
+    if (stock < 0) {
+      return { invalidStock: true };
+    }
+    return null;
   }
 }

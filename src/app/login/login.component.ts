@@ -101,30 +101,45 @@ export class LoginComponent implements OnInit {
 
   onSubmit() {
     if (this.loginForm.valid) {
-      // Simulamos la respuesta del backend por ahora
-      const mockResponse: AuthResponse = {
-        id: 1,
-        nombre: "Usuario de prueba",
+      const credentials = {
         email: this.loginForm.value.email,
-        rol: {
-          id: this.loginForm.value.email.includes('admin') ? 1 : 2,
-          nombre: this.loginForm.value.email.includes('admin') ? 'ROLE_ADMIN' : 'ROLE_USER'
-        }
+        password: this.loginForm.value.password
       };
   
-      // Usar el método del servicio para guardar el usuario
-      this.authService.setCurrentUser(mockResponse);
+      this.authService.login(credentials.email, credentials.password)
+        .subscribe({
+          next: (response) => {
+            // Crear el objeto de usuario basado en el email
+            const user: AuthResponse = {
+              id: 1,
+              nombre: credentials.email.split('@')[0],
+              email: credentials.email,
+              rol: {
+                id: credentials.email.includes('admin') ? 1 : 2,
+                nombre: credentials.email.includes('admin') ? 'ROLE_ADMIN' : 'ROLE_USER'
+              }
+            };
+            
+            this.authService.setCurrentUser(user);
+            this.snackBar.open(response.mensaje || 'Login exitoso', 'Cerrar', {
+              duration: 2000
+            });
   
-      this.snackBar.open('Login exitoso', 'Cerrar', {
-        duration: 2000
-      });
-  
-      // Redirigir según el rol
-      if (mockResponse.rol.nombre === 'ROLE_ADMIN') {
-        this.router.navigate(['/dashboard']);
-      } else {
-        this.router.navigate(['/user-dashboard']);
-      }
+            // Redirigir según el rol
+            if (credentials.email.includes('admin')) {
+              this.router.navigate(['/dashboard']);
+            } else {
+              this.router.navigate(['/user-dashboard']);
+            }
+          },
+          error: (error) => {
+            this.snackBar.open(
+              error.error?.mensaje || 'Error en el login', 
+              'Cerrar', 
+              { duration: 3000 }
+            );
+          }
+        });
     }
   }
 

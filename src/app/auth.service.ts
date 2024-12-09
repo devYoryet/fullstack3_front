@@ -1,14 +1,22 @@
+// src/app/auth.service.ts
 import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 
 interface User {
   id: number;
   nombre: string;
   email: string;
+  password?: string; // Añadir password para Basic Auth
   rol: {
     id: number;
     nombre: string;
   };
+}
+interface LoginResponse {
+  mensaje: string;
 }
 
 @Injectable({
@@ -16,8 +24,17 @@ interface User {
 })
 export class AuthService {
   private currentUser: User | null = null;
+  private apiUrl = 'http://localhost:8080/api/auth';
+  private httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json'
+    })
+  };
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private http: HttpClient
+  ) {
     if (isPlatformBrowser(this.platformId)) {
       const savedUser = localStorage.getItem('currentUser');
       if (savedUser) {
@@ -26,8 +43,63 @@ export class AuthService {
     }
   }
 
+  // En el método login
+  login(email: string, password: string): Observable<LoginResponse> {
+    const credentials = { email, password };
+  
+    return this.http
+      .post<LoginResponse>(
+        `${this.apiUrl}/login`,
+        credentials,
+        this.httpOptions
+      )
+      .pipe(
+        tap(response => {
+          // Crear usuario basado en el email Y guardando la contraseña
+          const user: User = {
+            id: 1,
+            nombre: email.split('@')[0],
+            email: email,
+            password: password, // Importante: guardar la contraseña
+            rol: {
+              id: email.includes('admin') ? 1 : 2,
+              nombre: email.includes('admin') ? 'ROLE_ADMIN' : 'ROLE_USER'
+            }
+          };
+          this.setCurrentUser(user);
+        }),
+        catchError(error => {
+          console.error('Error en login:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+  getBasicAuthHeader(): string | null {
+    const currentUser = this.getCurrentUser();
+    if (currentUser?.email && currentUser?.password) {
+      const credentials = `${currentUser.email}:${currentUser.password}`;
+      return 'Basic ' + btoa(credentials);
+    }
+    return null;
+  }
+
+  register(userData: {
+    nombre: string;
+    email: string;
+    password: string;
+  }): Observable<any> {
+    return this.http
+      .post(`${this.apiUrl}/registro`, userData, this.httpOptions)
+      .pipe(
+        catchError(error => {
+          console.error('Error en registro:', error);
+          return throwError(() => new Error(error.error?.mensaje || 'Error en el registro'));
+        })
+      );
+  }
   isLoggedIn(): boolean {
-    return !!this.currentUser;
+    const currentUser = this.getCurrentUser(); // Obtiene el usuario actual desde localStorage o una variable
+    return !!currentUser; // Retorna `true` si hay un usuario autenticado
   }
 
   getCurrentUser(): User | null {
@@ -35,11 +107,16 @@ export class AuthService {
   }
 
   setCurrentUser(user: User): void {
-    this.currentUser = user;
+    // Asegúrate de que la password se guarde también
+    this.currentUser = {
+      ...user,
+      password: user.password // Importante para Basic Auth
+    };
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('currentUser', JSON.stringify(user));
+      localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
     }
   }
+
 
   isAdmin(): boolean {
     return this.currentUser?.rol.nombre === 'ROLE_ADMIN';
@@ -54,5 +131,56 @@ export class AuthService {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem('currentUser');
     }
+  }
+  getAuthorizationHeader(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      const token = localStorage.getItem('token');
+      return token ? `Bearer ${token}` : null;
+    }
+    return null;
+  }
+
+  refreshToken(): Observable<any> {
+    const token = this.getAuthorizationHeader();
+    if (!token) {
+      return throwError(() => new Error('No hay token disponible'));
+    }
+
+    return this.http
+      .post(
+        `${this.apiUrl}/refresh-token`,
+        {},
+        {
+          headers: new HttpHeaders({
+            Authorization: token
+          })
+        }
+      )
+      .pipe(
+        tap((response: any) => {
+          if (response.token) {
+            localStorage.setItem('token', response.token);
+            this.httpOptions.headers = this.httpOptions.headers.set(
+              'Authorization',
+              `Bearer ${response.token}`
+            );
+          }
+        }),
+        catchError(error => {
+          console.error('Error al refrescar token:', error);
+          if (error.status === 401) {
+            this.logout();
+          }
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // Método para interceptar y manejar errores de autorización
+  handleAuthError(error: any): Observable<never> {
+    if (error.status === 401) {
+      this.logout();
+    }
+    return throwError(() => error);
   }
 }
