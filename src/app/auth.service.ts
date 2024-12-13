@@ -43,45 +43,30 @@ export class AuthService {
     }
   }
 
-  // En el método login
-  login(email: string, password: string): Observable<LoginResponse> {
+  login(email: string, password: string): Observable<User> {
     const credentials = { email, password };
   
-    return this.http
-      .post<LoginResponse>(
-        `${this.apiUrl}/login`,
-        credentials,
-        this.httpOptions
-      )
-      .pipe(
-        tap(response => {
-          // Crear usuario basado en el email Y guardando la contraseña
-          const user: User = {
-            id: 1,
-            nombre: email.split('@')[0],
-            email: email,
-            password: password, // Importante: guardar la contraseña
-            rol: {
-              id: email.includes('admin') ? 1 : 2,
-              nombre: email.includes('admin') ? 'ROLE_ADMIN' : 'ROLE_USER'
-            }
-          };
-          this.setCurrentUser(user);
-        }),
-        catchError(error => {
-          console.error('Error en login:', error);
-          return throwError(() => error);
-        })
-      );
+    return this.http.post<User>(`${this.apiUrl}/login`, credentials, this.httpOptions).pipe(
+      tap((user) => {
+        this.setCurrentUser(user); // Esto debe llamarse
+      }),
+      catchError((error) => {
+        console.error('Error en login:', error);
+        return throwError(() => error);
+      })
+    );
   }
+  
+  
   getBasicAuthHeader(): string | null {
     const currentUser = this.getCurrentUser();
     if (currentUser?.email && currentUser?.password) {
       const credentials = `${currentUser.email}:${currentUser.password}`;
-      return 'Basic ' + btoa(credentials);
+      return 'Basic ' + btoa(credentials); // Codifica en base64
     }
-    return null;
+    return null; // Si no hay credenciales disponibles
   }
+  
 
   register(userData: {
     nombre: string;

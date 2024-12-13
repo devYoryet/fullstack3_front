@@ -68,24 +68,20 @@ export class LoginComponent implements OnInit {
   }
 
   toggleView() {
-    this.isLogin = !this.isLogin;
-    if (!this.isLogin) {
-      // Registro: habilitar y añadir validadores
-      const confirmPasswordControl = this.loginForm.get('confirmPassword');
-      confirmPasswordControl?.enable();
-      confirmPasswordControl?.setValidators([
-        Validators.required,
-        this.passwordMatchValidator.bind(this)
-      ]);
-    } else {
-      // Login: deshabilitar y quitar validadores
-      const confirmPasswordControl = this.loginForm.get('confirmPassword');
-      confirmPasswordControl?.disable();
-      confirmPasswordControl?.clearValidators();
-    }
-    this.loginForm.get('confirmPassword')?.updateValueAndValidity();
+  this.isLogin = !this.isLogin;
+  const confirmPasswordControl = this.loginForm.get('confirmPassword');
+  if (!this.isLogin) {
+    confirmPasswordControl?.enable();
+    confirmPasswordControl?.setValidators([
+      Validators.required,
+      this.passwordMatchValidator.bind(this)
+    ]);
+  } else {
+    confirmPasswordControl?.disable();
+    confirmPasswordControl?.clearValidators();
   }
-
+  confirmPasswordControl?.updateValueAndValidity();
+}
   passwordMatchValidator(control: AbstractControl): {[key: string]: boolean} | null {
     if (!this.loginForm) return null;
     
@@ -109,39 +105,22 @@ export class LoginComponent implements OnInit {
       this.authService.login(credentials.email, credentials.password)
         .subscribe({
           next: (response) => {
-            // Crear el objeto de usuario basado en el email
-            const user: AuthResponse = {
-              id: 1,
-              nombre: credentials.email.split('@')[0],
-              email: credentials.email,
-              rol: {
-                id: credentials.email.includes('admin') ? 1 : 2,
-                nombre: credentials.email.includes('admin') ? 'ROLE_ADMIN' : 'ROLE_USER'
-              }
-            };
-            
-            this.authService.setCurrentUser(user);
-            this.snackBar.open(response.mensaje || 'Login exitoso', 'Cerrar', {
-              duration: 2000
-            });
-  
-            // Redirigir según el rol
-            if (credentials.email.includes('admin')) {
-              this.router.navigate(['/dashboard']);
-            } else {
-              this.router.navigate(['/user-dashboard']);
-            }
+            this.authService.setCurrentUser(response); // Asegúrate de que esto esté aquí
+            this.snackBar.open('Login exitoso', 'Cerrar', { duration: 2000 });
+            this.router.navigate(['/user-dashboard']);
           },
           error: (error) => {
             this.snackBar.open(
-              error.error?.mensaje || 'Error en el login', 
-              'Cerrar', 
+              error.error?.mensaje || 'Error en el login',
+              'Cerrar',
               { duration: 3000 }
             );
           }
         });
     }
   }
+  
+  
 
   forgotPassword() {
     const email = this.loginForm.get('email')?.value;

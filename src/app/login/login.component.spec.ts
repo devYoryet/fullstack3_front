@@ -108,24 +108,70 @@ describe('LoginComponent', () => {
 
 
   it('should handle successful user login', () => {
-    const mockResponse = { mensaje: 'Login exitoso' };
+    const mockResponse = {
+      id: 1,
+      nombre: 'Test User',
+      email: 'user@example.com',
+      rol: {
+        id: 2,
+        nombre: 'ROLE_USER'
+      }
+    };
+  
+    // Configurar el mock del método login
     authServiceSpy.login.and.returnValue(of(mockResponse));
-
+  
+    // Configurar el spy para setCurrentUser
+    authServiceSpy.setCurrentUser = jasmine.createSpy('setCurrentUser');
+  
+    // Simular valores en el formulario
     component.loginForm.patchValue({
       email: 'user@example.com',
       password: 'StrongPass123!'
     });
-
+  
     component.onSubmit();
-
-    expect(authServiceSpy.setCurrentUser).toHaveBeenCalled();
+  
+    // Expectativas
+    expect(authServiceSpy.setCurrentUser).toHaveBeenCalledWith(mockResponse);
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/user-dashboard']);
   });
-
   
 
  
-
+  it('should disable confirmPassword when switching to login', () => {
+    component.isLogin = false; // Inicia en modo registro
+    component.toggleView();
+    
+    expect(component.isLogin).toBeTrue();
+    const confirmPasswordControl = component.loginForm.get('confirmPassword');
+    expect(confirmPasswordControl?.enabled).toBeFalse();
+  });
+  it('should not call AuthService.login if form is invalid', () => {
+    component.loginForm.patchValue({
+      email: '',
+      password: '' // Campos vacíos
+    });
+  
+    component.onSubmit();
+  
+    expect(authServiceSpy.login).not.toHaveBeenCalled();
+    expect(snackBarSpy.open).not.toHaveBeenCalled();
+  });
+  it('should enable confirmPassword control when switching to register', () => {
+    component.isLogin = true; // Inicia como login
+    component.toggleView();
+    expect(component.isLogin).toBeFalse();
+    expect(component.loginForm.get('confirmPassword')?.enabled).toBeTrue();
+  });
+  
+  it('should disable confirmPassword control when switching to login', () => {
+    component.isLogin = false; // Inicia como registro
+    component.toggleView();
+    expect(component.isLogin).toBeTrue();
+    expect(component.loginForm.get('confirmPassword')?.enabled).toBeFalse();
+  });
+  
 
   
 });

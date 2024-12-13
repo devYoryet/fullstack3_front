@@ -16,72 +16,55 @@ export interface Product {
     imagen: string | null;
     compra?: any; // Lo hacemos opcional porque no siempre lo necesitamos
   }
-@Injectable({
-  providedIn: 'root'
-})
-export class ProductoService {
-  private apiUrl = 'http://localhost:8080/api/productos';
-
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService
-  ) { }
-
-  private getHeaders(): HttpHeaders {
-    const authHeader = this.authService.getBasicAuthHeader();
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': authHeader || '',
-      'Accept': 'application/json'
-    });
-  }
-
-  getProducts(p0?: { limit: number; }): Observable<Product[]> {
-    return this.http.get<Product[]>(this.apiUrl, {
-      headers: this.getHeaders(),
-      withCredentials: true
-    }).pipe(
-      catchError(error => {
-        console.error('Error en getProducts:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  getProduct(id: number): Observable<Product> {
-    return this.http.get<Product>(`${this.apiUrl}/${id}`, {
-      headers: this.getHeaders(),
-      withCredentials: true
-    });
-  }
-
-  createProduct(product: Product): Observable<Product> {
-    return this.http.post<Product>(this.apiUrl, product, {
-      headers: this.getHeaders(),
-      withCredentials: true
-    });
-  }
-
-  updateProduct(id: number, product: Product): Observable<Product> {
-    // Limpiamos el objeto antes de enviarlo
-    const productToSend = {
-      id: product.id,
-      nombre: product.nombre,
-      descripcion: product.descripcion,
-      precio: product.precio,
-      stock: product.stock,
-      cantidad: product.cantidad || 0,
-      imagen: product.imagen || null
-    };
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class ProductoService {
+    private apiUrl = 'http://localhost:8080/api/productos';
   
-    return this.http.put<Product>(`${this.apiUrl}/${id}`, productToSend, {
-      headers: this.getHeaders()
-    });
+    constructor(private http: HttpClient) {}
+  
+    getProducts(p0?: { limit: number }): Observable<Product[]> {
+      return this.http.get<Product[]>(this.apiUrl, { withCredentials: true }).pipe(
+        catchError((error) => {
+          if (error.status === 401) {
+            console.error('Error 401: No autorizado. Verifica tus credenciales.');
+          }
+          return throwError(() => error);
+        })
+      );
+    }
+  
+    getProduct(id: number): Observable<Product> {
+      return this.http.get<Product>(`${this.apiUrl}/${id}`, { withCredentials: true });
+    }
+  
+    createProduct(product: Product): Observable<Product> {
+      return this.http.post<Product>(this.apiUrl, product, { withCredentials: true });
+    }
+  
+    updateProduct(id: number, product: Product): Observable<Product> {
+      const productToSend = {
+        id: product.id,
+        nombre: product.nombre,
+        descripcion: product.descripcion,
+        precio: product.precio,
+        stock: product.stock,
+        cantidad: product.cantidad || 0,
+        imagen: product.imagen || null
+      };
+  
+      return this.http.put<Product>(`${this.apiUrl}/${id}`, productToSend, { withCredentials: true });
+    }
+  
+    deleteProduct(id: number): Observable<void> {
+      return this.http.delete<void>(`${this.apiUrl}/${id}`, { withCredentials: true });
+    }
+    getAvailableProducts(): Observable<Product[]> {
+      return this.http.get<Product[]>(`${this.apiUrl}/disponibles`);
+    }
+  
+    updateStock(id: number, quantity: number): Observable<Product> {
+      return this.http.put<Product>(`${this.apiUrl}/${id}/stock?cantidad=${quantity}`, {});
+    }
   }
-  deleteProduct(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, {
-      headers: this.getHeaders(),
-      withCredentials: true
-    });
-  }
-}

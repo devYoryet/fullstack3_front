@@ -47,7 +47,7 @@
       <input matInput type="number" formControlName="stock" min="0">
       @if (productForm.get('stock')?.hasError('required') && productForm.get('stock')?.touched) {
         <mat-error>El stock es requerido</mat-error>
-      }
+      }cd
       @if (productForm.get('stock')?.hasError('min')) {
         <mat-error>El stock debe ser mayor o igual a 0</mat-error>
       }
