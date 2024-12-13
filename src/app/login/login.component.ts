@@ -105,9 +105,15 @@ export class LoginComponent implements OnInit {
       this.authService.login(credentials.email, credentials.password)
         .subscribe({
           next: (response) => {
-            this.authService.setCurrentUser(response); // Asegúrate de que esto esté aquí
+            this.authService.setCurrentUser(response);
             this.snackBar.open('Login exitoso', 'Cerrar', { duration: 2000 });
-            this.router.navigate(['/user-dashboard']);
+            
+            // Redirigir según el rol
+            if (response.rol.nombre === 'ROLE_ADMIN') {
+              this.router.navigate(['/dashboard']);
+            } else if (response.rol.nombre === 'ROLE_USER') {
+              this.router.navigate(['/dashboard-user']);
+            }
           },
           error: (error) => {
             this.snackBar.open(

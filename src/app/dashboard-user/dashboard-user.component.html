@@ -43,40 +43,47 @@
       </div>
     </div>
     <!-- Products Grid -->
-    <div class="products-section">
-      <h2>Productos Destacados</h2>
-      <div class="products-grid" [class.with-cart]="showCart">
-        @for (product of products; track product.id) {
-          <mat-card class="product-card">
-            <div class="product-image-container">
-              <img mat-card-image [src]="product.imagen" [alt]="product.nombre">
-              @if (product.stock < 5 && product.stock > 0) {
-                <span class="stock-badge low">¡Últimas unidades!</span>
-              }
-              @if (product.stock === 0) {
-                <span class="stock-badge out">Agotado</span>
-              }
-            </div>
-            <mat-card-content>
-              <h3>{{product.nombre}}</h3>
-              <p class="description">{{product.descripcion}}</p>
-              <div class="price-container">
-                <p class="price">${{product.precio.toFixed(2)}}</p>
-                <p class="stock">Stock: {{product.stock}}</p>
-              </div>
-            </mat-card-content>
-            <mat-card-actions>
-              <button mat-raised-button color="primary"
-                      (click)="addToCart(product)"
-                      [disabled]="product.stock === 0">
-                <mat-icon>add_shopping_cart</mat-icon>
-                Agregar al Carrito
-              </button>
-            </mat-card-actions>
-          </mat-card>
-        }
-      </div>
-    </div>
+    <!-- Products Grid -->
+<div class="products-section">
+  <h2>Productos Destacados</h2>
+  <div class="products-grid" [class.with-cart]="showCart">
+    @for (product of products; track product.id) {
+      <mat-card class="product-card">
+        <div class="product-image-container">
+          <img 
+            mat-card-image 
+            [src]="productoService.getImageUrl(product)" 
+            [alt]="product.nombre"
+            (error)="handleImageError($event)"
+            class="product-image"
+          >
+          @if (product.stock < 5 && product.stock > 0) {
+            <span class="stock-badge low">¡Últimas unidades!</span>
+          }
+          @if (product.stock === 0) {
+            <span class="stock-badge out">Agotado</span>
+          }
+        </div>
+        <mat-card-content>
+          <h3>{{product.nombre}}</h3>
+          <p class="description">{{product.descripcion}}</p>
+          <div class="price-container">
+            <p class="price">${{product.precio.toFixed(2)}}</p>
+            <p class="stock">Stock: {{product.stock}}</p>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary"
+                  (click)="addToCart(product)"
+                  [disabled]="product.stock === 0">
+            <mat-icon>add_shopping_cart</mat-icon>
+            Agregar al Carrito
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+</div>
   </div>
 
   <!-- Shopping Cart Sidebar -->

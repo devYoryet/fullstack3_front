@@ -43,7 +43,10 @@ export class DashboardUserComponent implements OnInit {
   #router = inject(Router);
   #authService = inject(AuthService);
   #productoService = inject(ProductoService);
-
+  constructor(
+    // ... otros servicios
+    public productoService: ProductoService  // Necesita ser público para usarlo en el template
+  ) {}
   ngOnInit(): void {
     if (!this.#authService.isUser()) {
       this.#router.navigate(['/login']);
@@ -117,5 +120,9 @@ export class DashboardUserComponent implements OnInit {
 
   getTotal(): number {
     return this.cart.reduce((total, item) => total + item.product.precio * item.quantity, 0);
+  }
+  handleImageError(event: any) {
+    const img = event.target;
+    img.src = 'https://via.placeholder.com/300x300.png?text=Imagen+No+Disponible';
   }
 }

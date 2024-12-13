@@ -1,0 +1,6 @@
+projectKey=angular-demo
+serverUrl=http://localhost:9000
+serverVersion=8.9.10.61524
+dashboardUrl=http://localhost:9000/dashboard?id=angular-demo
+ceTaskId=AZO8eTjv2TjpcLHT3mMS
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AZO8eTjv2TjpcLHT3mMS

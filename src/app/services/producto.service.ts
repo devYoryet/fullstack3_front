@@ -67,4 +67,18 @@ export interface Product {
     updateStock(id: number, quantity: number): Observable<Product> {
       return this.http.put<Product>(`${this.apiUrl}/${id}/stock?cantidad=${quantity}`, {});
     }
+    // En producto.service.ts
+  
+    getImageUrl(product: Product): string {
+      if (!product.imagen) {
+        return 'https://via.placeholder.com/300x300.png?text=No+Image';
+      }
+    
+      if (product.imagen.startsWith('http')) {
+        return product.imagen;
+      }
+    
+      // Para imágenes que no cargan, retornar un placeholder
+      return 'https://via.placeholder.com/300x300.png?text=' + encodeURIComponent(product.nombre);
+    }
   }
